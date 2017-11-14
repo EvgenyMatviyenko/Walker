@@ -13,13 +13,14 @@ class Listener extends Actor {
   override def receive: Receive = {
     case SocketConnected =>
       println("Socket connected.")
-      sender() ! SocketWrite(new WowAuthPacket(AuthLogonChallenge("SilverDefender")).asBytes)
+      sender() ! SocketWrite(new WowAuthClientPacket(AuthLogonChallenge("SilverDefender")).asBytes)
     case SocketDisconnected =>
       println("Socket disconnected.")
     case SocketCommandFailed =>
       println("Socket command failed.")
     case SocketDataReceived(data) =>
-      println(s"Socket received data $data.")
+      val packet = new WowAuthServerPacket(data.toArray)
+      println(s"Socket received packet $packet with content ${packet.content}.")
     case SocketUnknownEvent(event) =>
       println(s"Socket received unknown event $event.")
   }

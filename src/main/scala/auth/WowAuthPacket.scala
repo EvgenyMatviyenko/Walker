@@ -1,16 +1,15 @@
 package auth
 
+import akka.util.ByteString
 import utils.ByteHelpers._
 
 /**
   * Created by evgenymatviyenko on 11/13/17.
   */
-class WowAuthPacket(content: WowAuthPacketContent) extends BytesRepresentable {
-  def command: WowAuthCommand.Value = content match {
-    case AuthLogonChallenge(_) => WowAuthCommand.AuthLogonChallange
-  }
+abstract class WowAuthPacket(val command: WowAuthCommand.Value) { }
 
-  override def asBytes: Array[Byte] = {
+class WowAuthClientPacket(content: WowAuthClientPacketContent) extends WowAuthPacket(content.command) {
+  def asBytes: Array[Byte] = {
     val commandBytes = command.id.toBytes(1)
     val unknownBytes = 0x00.toBytes(1)
     val contentBytes = content.asBytes
@@ -18,8 +17,13 @@ class WowAuthPacket(content: WowAuthPacketContent) extends BytesRepresentable {
   }
 }
 
-sealed trait WowAuthPacketContent extends BytesRepresentable { }
-case class AuthLogonChallenge(accountName: String) extends WowAuthPacketContent {
+sealed trait WowAuthClientPacketContent extends BytesRepresentable {
+  def command: WowAuthCommand.Value = this match {
+    case AuthLogonChallenge(_) => WowAuthCommand.AuthLogonChallange
+  }
+}
+
+case class AuthLogonChallenge(accountName: String) extends WowAuthClientPacketContent {
   override def asBytes: Array[Byte] = {
     val gamename = 0x00.toBytes(4)
     val version1 = 0x00.toBytes(1)
@@ -36,4 +40,25 @@ case class AuthLogonChallenge(accountName: String) extends WowAuthPacketContent 
     val size = Array(gamename, version1, version2, version3, build, platform, os, country, timezoneBias, ip, i, i_len).flatten.length.toBytes(2)
     Array(size, gamename, version1, version2, version3, build, platform, os, country, timezoneBias, ip, i_len, i).flatten
   }
+}
+
+class WowAuthServerPacket(bytes: Array[Byte]) extends WowAuthPacket(WowAuthCommand(bytes.head)) {
+  val result = WowAuthResult(bytes(2))
+
+  val content: WowAuthServerPacketContent = result match {
+    case WowAuthResult.Success =>
+      command match {
+        case WowAuthCommand.AuthLogonChallange =>
+          AuthLogonChallengeResponse(bytes.drop(3))
+        case _ =>
+          AuthNoResponse()
+      }
+    case _ => AuthNoResponse()
+  }
+}
+
+sealed trait WowAuthServerPacketContent {}
+case class AuthNoResponse() extends WowAuthServerPacketContent { }
+case class AuthLogonChallengeResponse(bytes: Array[Byte]) extends WowAuthServerPacketContent {
+  println(s"Bytes: ${bytes.map(java.lang.Byte.toUnsignedInt).toList}")
 }
