@@ -19,7 +19,7 @@ class Listener extends Actor {
     case SocketCommandFailed =>
       println("Socket command failed.")
     case SocketDataReceived(data) =>
-      val packet = new WowAuthServerPacket(data.toArray)
+      val packet = new WowAuthServerPacket(data)
       println(s"Socket received packet $packet with content ${packet.content}.")
     case SocketUnknownEvent(event) =>
       println(s"Socket received unknown event $event.")

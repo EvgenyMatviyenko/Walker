@@ -1,10 +1,35 @@
 package auth
 
+import scala.util.{Success, Try}
+
 /**
   * Created by evgenymatviyenko on 11/13/17.
   */
-object WowAuthResult extends Enumeration {
+sealed trait WowAuthResult { }
+object WowAuthResult {
+  def apply(byte: Byte): WowAuthResult = {
+    Try(WowAuthSuccessResultCode(byte)) match {
+      case Success(code) => WowAuthSuccessResult(code)
+      case _ => {
+        Try(WowAuthFailureResultCode(byte)) match {
+          case Success(code) => WowAuthFailureResult(code)
+          case _ => WowAuthUnknownResult()
+        }
+      }
+    }
+  }
+}
+
+case class WowAuthSuccessResult(code: WowAuthSuccessResultCode.Value) extends WowAuthResult
+case class WowAuthFailureResult(code: WowAuthFailureResultCode.Value) extends WowAuthResult
+case class WowAuthUnknownResult() extends WowAuthResult
+
+object WowAuthSuccessResultCode extends Enumeration {
   val Success = Value(0x00)
+  val SuccessSurvey = Value(0x0E)
+}
+
+object WowAuthFailureResultCode extends Enumeration {
   val Unknown0 = Value(0x01)
   val Unknown1 = Value(0x02)
   val Banned = Value(0x03)
@@ -18,7 +43,6 @@ object WowAuthResult extends Enumeration {
   val InvalidServer = Value(0x0B)
   val Suspended  = Value(0x0C)
   val NoAccess = Value(0x0D)
-  val SuccessSurvey = Value(0x0E)
   val ParentControl = Value(0x0F)
   val LockedEnforced = Value(0x10)
   val TrialEnded = Value(0x11)

@@ -42,23 +42,36 @@ case class AuthLogonChallenge(accountName: String) extends WowAuthClientPacketCo
   }
 }
 
-class WowAuthServerPacket(bytes: Array[Byte]) extends WowAuthPacket(WowAuthCommand(bytes.head)) {
+class WowAuthServerPacket(bytes: ByteString) extends WowAuthPacket(WowAuthCommand(bytes.head)) {
   val result = WowAuthResult(bytes(2))
 
   val content: WowAuthServerPacketContent = result match {
-    case WowAuthResult.Success =>
+    case WowAuthSuccessResult(_) =>
+      val contentBytes = bytes.drop(3)
+
       command match {
         case WowAuthCommand.AuthLogonChallange =>
-          AuthLogonChallengeResponse(bytes.drop(3))
+          AuthLogonChallengeResponse(contentBytes)
         case _ =>
-          AuthNoResponse()
+          AuthUnknownResponse()
       }
-    case _ => AuthNoResponse()
+    case WowAuthFailureResult(code) =>
+      AuthFailureResponse(code)
+    case WowAuthUnknownResult() =>
+      AuthUnknownResponse()
   }
 }
 
-sealed trait WowAuthServerPacketContent {}
-case class AuthNoResponse() extends WowAuthServerPacketContent { }
-case class AuthLogonChallengeResponse(bytes: Array[Byte]) extends WowAuthServerPacketContent {
-  println(s"Bytes: ${bytes.map(java.lang.Byte.toUnsignedInt).toList}")
+sealed trait WowAuthServerPacketContent { }
+case class AuthUnknownResponse() extends WowAuthServerPacketContent { }
+case class AuthFailureResponse(code: WowAuthFailureResultCode.Value) extends WowAuthServerPacketContent { }
+case class AuthLogonChallengeResponse(bytes: ByteString) extends WowAuthServerPacketContent {
+  val b = bytes.take(32)
+  val unknown1 = bytes.slice(32, 33)
+  val g = bytes.slice(33, 34)
+  val unknown2 = bytes.slice(34, 35)
+  val n = bytes.slice(35, 67)
+  val s = bytes.slice(67, 99)
+  val unknown3 = bytes.slice(99, 115)
+  val securityFlags = bytes.slice(115, 116)
 }
