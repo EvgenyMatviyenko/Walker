@@ -2,6 +2,7 @@ import java.net.InetSocketAddress
 
 import akka.actor.{Actor, ActorSystem, Props}
 import auth._
+import auth.packets.{AuthLogonChallenge, WowAuthClientPacket, WowAuthServerPacket}
 import config.Config
 import socket._
 

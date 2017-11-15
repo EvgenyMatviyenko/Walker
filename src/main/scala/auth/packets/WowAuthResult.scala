@@ -1,4 +1,4 @@
-package auth
+package auth.packets
 
 import scala.util.{Success, Try}
 
