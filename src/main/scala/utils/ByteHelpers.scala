@@ -2,26 +2,26 @@ package utils
 
 import java.nio.ByteBuffer
 
+import akka.util.ByteString
+import auth.BytesRepresentable
+
 /**
   * Created by evgenymatviyenko on 11/12/17.
   */
 object ByteHelpers {
-  implicit class IntWithBytes(x: Int) {
-    def toBytes(length: Int) = {
-      val intSize = 4
-      val arr = ByteBuffer.allocate(intSize).putInt(x).array()
-      arr.drop(intSize - length).reverse
-    }
+  implicit class IntWithBytes(x: Int) extends BytesRepresentable {
+    override def asBytes: ByteString = ByteString(ByteBuffer.allocate(4).putInt(x).array().reverse)
   }
 
-  implicit class StringWithBytes(x: String) {
-    def toBytes = x.toCharArray.flatMap(_.toBytes)
+  implicit class StringWithBytes(x: String) extends BytesRepresentable {
+    override def asBytes: ByteString = ByteString(x.toCharArray.flatMap(_.toBytes))
   }
 
   implicit class CharWithBytes(x: Char) {
-    def toBytes = {
-      val charSize = 2
-      ByteBuffer.allocate(charSize).putChar(x).array().drop(1)
-    }
+    def toBytes = ByteString(ByteBuffer.allocate(2).putChar(x).array().reverse.take(1))
+  }
+
+  implicit class ByteWithUnsignedInt(x: Byte) {
+    def toUnsignedInt: Int = java.lang.Byte.toUnsignedInt(x)
   }
 }

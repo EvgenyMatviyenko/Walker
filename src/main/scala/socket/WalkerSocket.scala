@@ -17,7 +17,7 @@ case class SocketUnknownEvent(event: Any) extends WalkerSocketEvent
 sealed trait WalkerSocketCommand { }
 case class SocketConnect(address: InetSocketAddress) extends WalkerSocketCommand
 case object SocketDisconnect extends WalkerSocketCommand
-case class SocketWrite(bytes: Array[Byte]) extends WalkerSocketCommand
+case class SocketWrite(data: ByteString) extends WalkerSocketCommand
 
 class WalkerSocket(listener: ActorRef) extends Actor {
   import context.system
@@ -45,8 +45,8 @@ class WalkerSocket(listener: ActorRef) extends Actor {
   }
 
   def connected(socket: ActorRef): Receive = {
-    case SocketWrite(bytes) =>
-      socket ! Write(ByteString(bytes))
+    case SocketWrite(data) =>
+      socket ! Write(data)
 
     case CommandFailed =>
       listener ! SocketCommandFailed

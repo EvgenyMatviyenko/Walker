@@ -1,8 +1,7 @@
 import java.net.InetSocketAddress
 
-import akka.actor.{Actor, ActorSystem, Props}
-import auth._
-import auth.packets.{AuthLogonChallenge, WowAuthClientPacket, WowAuthServerPacket}
+import akka.actor.{Actor, ActorRef, ActorSystem, Props}
+import auth.packets._
 import config.Config
 import socket._
 
@@ -14,16 +13,29 @@ class Listener extends Actor {
   override def receive: Receive = {
     case SocketConnected =>
       println("Socket connected.")
-      sender() ! SocketWrite(new WowAuthClientPacket(AuthLogonChallenge("SilverDefender")).asBytes)
+      sendPacket(new WowAuthClientPacket(AuthLogonChallenge("SilverDefender")))
     case SocketDisconnected =>
       println("Socket disconnected.")
     case SocketCommandFailed =>
       println("Socket command failed.")
     case SocketDataReceived(data) =>
       val packet = new WowAuthServerPacket(data)
-      println(s"Socket received packet $packet with content ${packet.content}.")
+      println(s"Socket received packet $packet.")
+      packet.content match {
+        case AuthFailureResponse(code) =>
+          println(s"Socket received failure response with $code code.")
+        case AuthUnknownResponse() =>
+          println("Socket received unknown response.")
+        case AuthLogonChallengeResponse(_) =>
+          sendPacket(new WowAuthClientPacket(AuthLogonProof()))
+      }
     case SocketUnknownEvent(event) =>
       println(s"Socket received unknown event $event.")
+  }
+
+  private def sendPacket(packet: WowAuthClientPacket): Unit = {
+    println(s"Socket sent packet $packet.")
+    sender() ! SocketWrite(packet.asBytes)
   }
 }
 
