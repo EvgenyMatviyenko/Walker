@@ -14,3 +14,6 @@ libraryDependencies ++= Seq(
   "com.typesafe.akka" %% "akka-agent"   % akkaVersion,
   "com.typesafe.akka" %% "akka-testkit" % akkaVersion % "test"
 )
+
+libraryDependencies += "org.scalactic" %% "scalactic" % "3.0.4"
+libraryDependencies += "org.scalatest" %% "scalatest" % "3.0.4" % "test"

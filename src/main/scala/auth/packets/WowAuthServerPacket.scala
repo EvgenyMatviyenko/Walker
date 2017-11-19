@@ -21,7 +21,7 @@ class WowAuthServerPacket(bytes: ByteString) extends WowAuthPacket(WowAuthComman
           AuthUnknownResponse()
       }
     case WowAuthFailureResult(code) =>
-      AuthFailureResponse(code)
+      AuthEmptyResponse()
     case WowAuthUnknownResult() =>
       AuthUnknownResponse()
   }
@@ -31,16 +31,16 @@ class WowAuthServerPacket(bytes: ByteString) extends WowAuthPacket(WowAuthComman
 
 sealed trait WowAuthServerPacketContent { }
 case class AuthUnknownResponse() extends WowAuthServerPacketContent { }
-case class AuthFailureResponse(code: WowAuthFailureResultCode.Value) extends WowAuthServerPacketContent { }
+case class AuthEmptyResponse() extends WowAuthServerPacketContent { }
 case class AuthLogonChallengeResponse(bytes: ByteString) extends WowAuthServerPacketContent {
-  val b = BigInt(bytes.take(32).toArray)
-  val unknown1 = bytes.slice(32, 33)
-  val g = bytes.slice(33, 34).head.toUnsignedInt
-  val unknown2 = bytes.slice(34, 35)
-  val n = BigInt(bytes.slice(35, 67).toArray)
-  val s = BigInt(bytes.slice(67, 99).toArray)
-  val unknown3 = bytes.slice(99, 115)
-  val securityFlags = bytes.slice(115, 116).head.toUnsignedInt
+  val bigB = bytes.take(32).reverse.toUnsignedBigInt
+  //val unknown1 = bytes.slice(32, 33).reverse
+  val g = bytes.slice(33, 34).reverse.toUnsignedBigInt
+  //val unknown2 = bytes.slice(34, 35).reverse
+  val bigN = bytes.slice(35, 67).reverse.toUnsignedBigInt
+  val s = bytes.slice(67, 99).reverse.toUnsignedBigInt
+  //val unknown3 = bytes.slice(99, 115).reverse
+  val securityFlags = bytes.slice(115, 116).reverse.head.toUnsignedInt
 
-  override def toString: String = s"AuthLogonChallengeResponse(b: $b, g: $g, n: $n, s: $s, securityFlags: $securityFlags)"
+  override def toString: String = s"AuthLogonChallengeResponse(N: $bigB, g: $g, N: $bigN, s: $s, securityFlags: $securityFlags)"
 }

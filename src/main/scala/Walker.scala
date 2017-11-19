@@ -1,9 +1,11 @@
 import java.net.InetSocketAddress
 
 import akka.actor.{Actor, ActorRef, ActorSystem, Props}
+import auth.SRPProtocol
 import auth.packets._
 import config.Config
 import socket._
+import utils.ByteHelpers._
 
 /**
   * Created by evgenymatviyenko on 11/11/17.
@@ -22,12 +24,13 @@ class Listener extends Actor {
       val packet = new WowAuthServerPacket(data)
       println(s"Socket received packet $packet.")
       packet.content match {
-        case AuthFailureResponse(code) =>
-          println(s"Socket received failure response with $code code.")
+        case AuthEmptyResponse() =>
+          println(s"Socket received empty response.")
         case AuthUnknownResponse() =>
           println("Socket received unknown response.")
-        case AuthLogonChallengeResponse(_) =>
-          sendPacket(new WowAuthClientPacket(AuthLogonProof()))
+        case response @ AuthLogonChallengeResponse(_) =>
+          val (bigA, bigM) = SRPProtocol.calculate(response.bigN, response.g, response.bigB, response.s, "SilverDefender", "Evgeny32165487")
+          sendPacket(new WowAuthClientPacket(AuthLogonProof(bigA, bigM)))
       }
     case SocketUnknownEvent(event) =>
       println(s"Socket received unknown event $event.")

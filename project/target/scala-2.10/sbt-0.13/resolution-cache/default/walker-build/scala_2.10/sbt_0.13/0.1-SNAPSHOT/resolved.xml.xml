@@ -4,7 +4,7 @@
 		module="walker-build"
 		revision="0.1-SNAPSHOT"
 		status="integration"
-		publication="20171112174756"
+		publication="20171118122839"
 		e:sbtVersion="0.13" e:scalaVersion="2.10"
 	>
 		<description>
