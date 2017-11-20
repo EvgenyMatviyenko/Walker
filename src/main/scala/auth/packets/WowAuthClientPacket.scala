@@ -30,15 +30,15 @@ sealed trait WowAuthClientPacketContent extends BytesRepresentable {
 
 case class AuthLogonChallenge(accountName: String) extends WowAuthClientPacketContent {
   override def asBytes: ByteString = {
-    val gamename = 0x00.asBytes.reverse.take(4)
-    val version1 = 0x00.asBytes.reverse.take(1)
-    val version2 = 0x00.asBytes.reverse.take(1)
-    val version3 = 0x00.asBytes.reverse.take(1)
-    val build = BigInt(6141).asBytes.reverse.take(2)
-    val platform = 0x00.asBytes.reverse.take(4)
-    val os = 0x00.asBytes.reverse.take(4)
-    val country = 0x00.asBytes.reverse.take(4)
-    val timezoneBias = 0x00.asBytes.reverse.take(4)
+    val gamename = "WoW".asBytes.reverse.take(3) ++ 0x00.asBytes.take(1)
+    val version1 = 1.asBytes.reverse.take(1)
+    val version2 = 12.asBytes.reverse.take(1)
+    val version3 = 1.asBytes.reverse.take(1)
+    val build = BigInt(5875).asBytes.reverse.take(2)
+    val platform = 0x00.asBytes.take(1) ++ "x86".asBytes.reverse.take(3)
+    val os = "OSX".asBytes.reverse.take(3) ++ 0x00.asBytes.take(1)
+    val country = "enUS".asBytes.reverse.take(4)
+    val timezoneBias = 120.asBytes.reverse.take(4)
     val ip = 0x00.asBytes.reverse.take(4)
     val i = accountName.asBytes
     val i_len = i.length.asBytes.reverse.take(1)
@@ -55,8 +55,8 @@ case class AuthLogonChallenge(accountName: String) extends WowAuthClientPacketCo
 
 case class AuthLogonProof(bigA: BigInt, bigM: BigInt) extends  WowAuthClientPacketContent {
   override def asBytes: ByteString = {
-    val bigABytes = bigA.asBytes.reverse
-    val bigMBytes = bigM.asBytes.reverse
+    val bigABytes = bigA.asBytes
+    val bigMBytes = bigM.asBytes
     val crcHashBytes = ByteString(Array.fill(20)(0x00.toByte))
     val keysCountBytes = 0x00.asBytes.reverse.take(1)
     val securityFlagsBytes = 0x00.asBytes.reverse.take(1)

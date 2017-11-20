@@ -6,6 +6,7 @@ import auth.packets._
 import config.Config
 import socket._
 import utils.ByteHelpers._
+import scala.util.Random
 
 /**
   * Created by evgenymatviyenko on 11/11/17.
@@ -29,7 +30,7 @@ class Listener extends Actor {
         case AuthUnknownResponse() =>
           println("Socket received unknown response.")
         case response @ AuthLogonChallengeResponse(_) =>
-          val (bigA, bigM) = SRPProtocol.calculate(response.bigN, response.g, response.bigB, response.s, "SilverDefender", "Evgeny32165487")
+          val (bigA, bigM) = SRPProtocol.calculate(response.bigN, response.g, response.bigB, response.s, "SilverDefender", "Evgeny32165487", Random)
           sendPacket(new WowAuthClientPacket(AuthLogonProof(bigA, bigM)))
       }
     case SocketUnknownEvent(event) =>

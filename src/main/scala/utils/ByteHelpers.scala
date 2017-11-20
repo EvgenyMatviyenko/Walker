@@ -18,7 +18,17 @@ object ByteHelpers {
   }
 
   implicit class BigIntBytesRepresentable(x: BigInt) extends BytesRepresentable {
-    override def asBytes: ByteString = ByteString(x.toByteArray)
+    private def byteArray: Array[Byte] = {
+      val array = x.toByteArray
+      if (array.length > 0 && array(0) == 0x00.toByte) array.drop(1)
+      else array
+    }
+
+    override def asBytes: ByteString = ByteString(byteArray)
+  }
+
+  implicit class ByteStringBytesRepresentable(x: ByteString) extends BytesRepresentable {
+    override def asBytes: ByteString = x
   }
 
   implicit class CharBytesRepresentable(x: Char) {
